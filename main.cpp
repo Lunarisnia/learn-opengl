@@ -96,19 +96,19 @@ int main() {
   }
   // ======= Fragment Shader Setup END ======
 
+  // Shader program setup:
+  // =====================
   unsigned int shaderProgram;
   shaderProgram = glCreateProgram();
   glAttachShader(shaderProgram, vertexShader);
   glAttachShader(shaderProgram, fragmentShader);
   glLinkProgram(shaderProgram);
-
   glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
   if (!success) {
     glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
     std::cout << "ERROR::SHADER::PROGRAM::LINK_FAILED\n"
               << infoLog << std::endl;
   }
-
   // We don't need it anymore, we can free the memory
   glDeleteShader(fragmentShader);
   glDeleteShader(vertexShader);
@@ -135,6 +135,20 @@ int main() {
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
 
+  float vertices2[] = {
+      1.0f, 1.0f, 0.0f, // Top right
+      1.0f, 0.5f, 0.0f, // Bottom right
+      0.6f, 0.5f, 0.0f  // Bottom left
+  };
+  unsigned int VBO2, VAO2;
+  glGenVertexArrays(1, &VAO2);
+  glGenBuffers(1, &VBO2);
+  glBindVertexArray(VAO2);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO2);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(0);
+
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
 
@@ -145,8 +159,14 @@ int main() {
     /*glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);*/
 
     glUseProgram(shaderProgram);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    glBindVertexArray(VAO2);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    /*glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);*/
+    /*glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);*/
 
     glfwSwapBuffers(window);
     glfwPollEvents();
