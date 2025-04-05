@@ -16,6 +16,13 @@ const char *fragmentShaderSource =
     "   FragColor = vec4(0.63, 0.43, 0.51, 1.0);\n"
     "}\0";
 
+const char *fragmentShaderRedSource =
+    "#version 330 core\n"
+    "out vec4 FragColor;\n"
+    "void main() {\n"
+    "   FragColor = vec4(1.0, 0.0, 0.0, 1.0);\n"
+    "}\0";
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   std::cout << "resizing to: " << width << "x" << height << std::endl;
   glViewport(0, 0, width, height);
@@ -94,6 +101,16 @@ int main() {
     std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
               << infoLog << std::endl;
   }
+
+  unsigned int redFragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+  glShaderSource(redFragmentShader, 1, &fragmentShaderRedSource, NULL);
+  glCompileShader(redFragmentShader);
+  glGetShaderiv(redFragmentShader, GL_COMPILE_STATUS, &success);
+  if (!success) {
+    glGetShaderInfoLog(redFragmentShader, 512, NULL, infoLog);
+    std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
+              << infoLog << std::endl;
+  }
   // ======= Fragment Shader Setup END ======
 
   // Shader program setup:
@@ -112,6 +129,17 @@ int main() {
   // We don't need it anymore, we can free the memory
   glDeleteShader(fragmentShader);
   glDeleteShader(vertexShader);
+
+  unsigned int shaderProgram2 = glCreateProgram();
+  glAttachShader(shaderProgram2, vertexShader);
+  glAttachShader(shaderProgram2, redFragmentShader);
+  glLinkProgram(shaderProgram2);
+  glGetProgramiv(shaderProgram2, GL_LINK_STATUS, &success);
+  if (!success) {
+    glGetProgramInfoLog(shaderProgram2, 512, NULL, infoLog);
+    std::cout << "ERROR::SHADER::PROGRAM::LINK_FAILED\n"
+              << infoLog << std::endl;
+  }
 
   // We create a vertex buffer
   unsigned int VBO, VAO, EBO;
@@ -162,6 +190,7 @@ int main() {
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
+    glUseProgram(shaderProgram2);
     glBindVertexArray(VAO2);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
