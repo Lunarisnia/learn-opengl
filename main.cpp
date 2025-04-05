@@ -35,6 +35,7 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
+  // ============= GLFW Window Creation
   GLFWwindow *window = glfwCreateWindow(800, 600, "LearnOpenGL", NULL, NULL);
   if (window == NULL) {
     std::cout << "Failed to create GLFW Window" << std::endl;
@@ -43,6 +44,7 @@ int main() {
   }
   glfwMakeContextCurrent(window);
 
+  // ============= GLAD Loading
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     std::cout << "Failed to initialize GLAD" << std::endl;
     return -1;
@@ -55,14 +57,6 @@ int main() {
   float vertices[] = {-0.5f, -0.5f, 0.0f, // Split
                       0.5f,  -0.5f, 0.0f, // Split
                       0.0f,  0.5f,  0.0f};
-
-  // We create a vertex buffer
-  unsigned int VBO;
-  glGenBuffers(1, &VBO);
-  // Bind the vertex buffer to a memory space in the GPU
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  // Actually set the value of the vertex buffer on the GPU from the CPU
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
   // ======= Vertex Shader Setup ==============
   unsigned int vertexShader;
@@ -100,15 +94,31 @@ int main() {
   glAttachShader(shaderProgram, fragmentShader);
   glLinkProgram(shaderProgram);
 
-  glGetProgramiv(shaderProgram, GL_COMPILE_STATUS, &success);
+  glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
   if (!success) {
     glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-    std::cout << "ERROR::SHADER::PROGRAM::COMPILATION_FAILED\n"
+    std::cout << "ERROR::SHADER::PROGRAM::LINK_FAILED\n"
               << infoLog << std::endl;
   }
-  glUseProgram(shaderProgram);
+
+  // We don't need it anymore, we can free the memory
   glDeleteShader(fragmentShader);
   glDeleteShader(vertexShader);
+
+  // We create a vertex buffer
+  unsigned int VBO, VAO;
+  glGenVertexArrays(1, &VAO);
+  glGenBuffers(1, &VBO);
+
+  // Bind the VAO before setting the VBO
+  glBindVertexArray(VAO);
+
+  // Bind the vertex buffer to a memory space in the GPU
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  // Actually set the value of the vertex buffer on the GPU from the CPU
+  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+  glEnableVertexAttribArray(0);
 
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
@@ -116,9 +126,19 @@ int main() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    glUseProgram(shaderProgram);
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
+
+  // optional: de-allocate all resources once they've outlived their purpose:
+  // ------------------------------------------------------------------------
+  glDeleteVertexArrays(1, &VAO);
+  glDeleteBuffers(1, &VBO);
+  glDeleteProgram(shaderProgram);
 
   glfwTerminate();
   return 0;
