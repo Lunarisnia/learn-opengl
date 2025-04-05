@@ -54,10 +54,14 @@ int main() {
 
   // Vertices of a triangle
   float vertices[] = {
-      0.5f,  0.5f,  0.0f, // top right
-      0.5f,  -0.5f, 0.0f, // bottom right
+      0.5f, 0.5f, 0.0f,   // top right
+      0.5f, -0.5f, 0.0f,  // bottom right
       -0.5f, -0.5f, 0.0f, // bottom left
-      -0.5f, 0.5f,  0.0f  // top left
+                          //
+      -0.9f, 0.5f, 0.0f,  // top left
+      -1.0f, -0.5f, 0.0f, // Bottom left
+      -0.8f, -0.5f, 0.0f  // bottom right
+
   };
   // Setup for index based rendering using EBO
   unsigned int indices[] = {
@@ -145,8 +149,10 @@ int main() {
     /*glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);*/
 
     glUseProgram(shaderProgram);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    /*glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);*/
+    /*glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);*/
+    glBindVertexArray(VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
