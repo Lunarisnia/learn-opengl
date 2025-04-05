@@ -53,9 +53,18 @@ int main() {
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
   // Vertices of a triangle
-  float vertices[] = {-0.5f, -0.5f, 0.0f, // Split
-                      0.5f,  -0.5f, 0.0f, // Split
-                      0.0f,  0.5f,  0.0f};
+  float vertices[] = {
+      0.5f,  0.5f,  0.0f, // top right
+      0.5f,  -0.5f, 0.0f, // bottom right
+      -0.5f, -0.5f, 0.0f, // bottom left
+      -0.5f, 0.5f,  0.0f  // top left
+  };
+  // Setup for index based rendering using EBO
+  unsigned int indices[] = {
+      // note that we start from 0!
+      0, 1, 3, // first triangle
+      1, 2, 3  // second triangle
+  };
 
   // ======= Vertex Shader Setup ==============
   unsigned int vertexShader;
@@ -105,7 +114,8 @@ int main() {
   glDeleteShader(vertexShader);
 
   // We create a vertex buffer
-  unsigned int VBO, VAO;
+  unsigned int VBO, VAO, EBO;
+  glGenBuffers(1, &EBO);
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
 
@@ -116,6 +126,12 @@ int main() {
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   // Actually set the value of the vertex buffer on the GPU from the CPU
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+  // Bind the EBO before setting the VBO
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+               GL_STATIC_DRAW);
+
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
 
@@ -125,9 +141,12 @@ int main() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
+    // Wireframe mode
+    /*glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);*/
+
     glUseProgram(shaderProgram);
-    glBindVertexArray(VAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     glfwSwapBuffers(window);
     glfwPollEvents();
