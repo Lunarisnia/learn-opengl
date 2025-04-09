@@ -49,8 +49,10 @@ int main() {
 
   Shader shaderProgram("./shaders/vertex-shader.vert",
                        "./shaders/fragment-shader.frag");
+  shaderProgram.use();
+  shaderProgram.setFloat("horizontalOffset", 0.5f);
 
-  Shader shaderProgram2("./shaders/vertex-shader.vert",
+  Shader shaderProgram2("./shaders/inverted-vertex.vert",
                         "./shaders/fragment-shader.frag");
 
   // We create a vertex buffer
