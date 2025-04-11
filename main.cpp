@@ -1,4 +1,5 @@
 #include "src/shader.h"
+#include "src/stb_image.h"
 #include <glad/glad.h>
 // FORCE
 #include <GLFW/glfw3.h>
@@ -97,10 +98,18 @@ int main() {
                         (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
+  // Check max attribute allowed on hardware
+  // =======================================
   int nrAttributes;
   glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
   std::cout << "Maximum nr of vertex attributes supported: " << nrAttributes
             << std::endl;
+
+  // Load Textures
+  // =============
+  int width, height, nrChannels;
+  unsigned char *data =
+      stbi_load("./textures/container.jpg", &width, &height, &nrChannels, 0);
 
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
