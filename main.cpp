@@ -43,10 +43,10 @@ int main() {
 
   // Vertices of a triangle
   float vertices[] = {
-      0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, // top right
-      0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom right
-      -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, // bottom left
-      -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 1.0f  //
+      0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
+      0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
+      -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
+      -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // top left
   };
   int indices[] = {
       0, 1, 3, //
@@ -54,7 +54,7 @@ int main() {
   };
 
   Shader shaderProgram("./shaders/vertex-shader.vert",
-                       "./shaders/fragment-shader.frag");
+                       "./shaders/texture-shader.frag");
   shaderProgram.use();
   shaderProgram.setFloat("horizontalOffset", 0.0f);
 
@@ -76,12 +76,16 @@ int main() {
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
                GL_STATIC_DRAW);
 
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
 
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
                         (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
+
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                        (void *)(6 * sizeof(float)));
+  glEnableVertexAttribArray(2);
 
   // Check max attribute allowed on hardware
   // =======================================
@@ -124,6 +128,7 @@ int main() {
     /*glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);*/
 
     shaderProgram.use();
+    glBindTexture(GL_TEXTURE_2D, texture);
     glBindVertexArray(VAO);
     /*glDrawArrays(GL_TRIANGLES, 0, 3);*/
 
