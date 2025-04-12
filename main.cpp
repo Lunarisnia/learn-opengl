@@ -5,6 +5,8 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
+float smileyTransparency = 0.2f;
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   std::cout << "resizing to: " << width << "x" << height << std::endl;
   glViewport(0, 0, width, height);
@@ -13,6 +15,12 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
+  }
+  if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+    smileyTransparency -= 0.1f;
+  }
+  if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+    smileyTransparency += 0.1f;
   }
 }
 
@@ -43,10 +51,11 @@ int main() {
 
   // Vertices of a triangle
   float vertices[] = {
-      0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
-      0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
+      // Coordinate       Color             TextureCoord
+      0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 2.0f, 2.0f, // top right
+      0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 2.0f, 0.0f, // bottom right
       -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-      -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f  // top left
+      -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 2.0f  // top left
   };
   int indices[] = {
       0, 1, 3, //
@@ -126,7 +135,7 @@ int main() {
   glGenTextures(1, &texture2);
   glBindTexture(GL_TEXTURE_2D, texture2);
 
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                   GL_LINEAR_MIPMAP_LINEAR);
@@ -153,6 +162,7 @@ int main() {
     /*glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);*/
 
     shaderProgram.use();
+    shaderProgram.setFloat("transparency", smileyTransparency);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
     glActiveTexture(GL_TEXTURE1);
