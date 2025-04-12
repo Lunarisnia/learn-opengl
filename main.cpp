@@ -94,6 +94,10 @@ int main() {
   std::cout << "Maximum nr of vertex attributes supported: " << nrAttributes
             << std::endl;
 
+  shaderProgram.use();
+  shaderProgram.setInt("imageTexture", 0);
+  shaderProgram.setInt("imageTexture2", 1);
+
   unsigned int texture;
   glGenTextures(1, &texture);
   glBindTexture(GL_TEXTURE_2D, texture);
@@ -118,6 +122,27 @@ int main() {
   }
   stbi_image_free(data);
 
+  unsigned int texture2;
+  glGenTextures(1, &texture2);
+  glBindTexture(GL_TEXTURE_2D, texture2);
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                  GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  stbi_set_flip_vertically_on_load(true);
+  data =
+      stbi_load("./textures/awesomeface.png", &width, &height, &nrChannels, 0);
+  if (data) {
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+  } else {
+    std::cout << "ERROR::IMAGE_LOADING: failed to load textures" << std::endl;
+  }
+  stbi_image_free(data);
+
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
 
@@ -128,7 +153,10 @@ int main() {
     /*glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);*/
 
     shaderProgram.use();
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texture2);
     glBindVertexArray(VAO);
     /*glDrawArrays(GL_TRIANGLES, 0, 3);*/
 
