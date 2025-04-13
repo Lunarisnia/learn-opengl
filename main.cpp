@@ -1,5 +1,7 @@
+#include "glm/common.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/quaternion_transform.hpp"
+#include "glm/trigonometric.hpp"
 #include "src/shader.h"
 #include "src/stb_image.h"
 #include <glad/glad.h>
@@ -71,6 +73,14 @@ int main() {
                        "./shaders/texture-shader.frag");
   shaderProgram.use();
   shaderProgram.setFloat("horizontalOffset", 0.0f);
+
+  Shader shaderProgram2("./shaders/vertex-shader.vert",
+                        "./shaders/texture-shader.frag");
+
+  shaderProgram2.use();
+  shaderProgram2.setFloat("horizontalOffset", 0.0f);
+  shaderProgram2.setInt("imageTexture", 0);
+  shaderProgram2.setInt("imageTexture2", 1);
 
   // We create a vertex buffer
   unsigned int VBO, VAO, EBO;
@@ -160,9 +170,11 @@ int main() {
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
     glm::mat4 trans = glm::mat4(1.0f);
+    // Always remember that the operation is applied in reverse, in this case
+    // its rotate then translate
     trans = glm::translate(trans, glm::vec3(-0.5f, 0.0f, 0.0f));
     trans = glm::rotate(trans, glm::radians(float(glfwGetTime()) * 100.0f),
-                        glm::normalize(glm::vec3(0.5f, 0.5f, 0.0f)));
+                        glm::normalize(glm::vec3(0.0f, 0.0f, 1.0f)));
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -181,6 +193,19 @@ int main() {
     /*glDrawArrays(GL_TRIANGLES, 0, 3);*/
 
     /*glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);*/
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+    // 2nd box
+    glm::mat4 trans2(1.0f);
+    trans2 = glm::translate(trans2, glm::vec3(0.5f, 0.5f, 0.0f));
+    glm::vec2 scale(1.0f);
+    scale *= glm::abs(glm::sin(glfwGetTime() * 2.0f));
+    trans2 = glm::scale(trans2, glm::vec3(scale, 0.0f));
+
+    shaderProgram2.use();
+    shaderProgram2.setMat4("transform", trans2);
+    shaderProgram2.setFloat("transparency", smileyTransparency);
+    /*shaderProgram2.setMat4("transform", trans);*/
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     glfwSwapBuffers(window);
