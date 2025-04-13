@@ -1,8 +1,13 @@
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/ext/quaternion_transform.hpp"
 #include "src/shader.h"
 #include "src/stb_image.h"
 #include <glad/glad.h>
 // FORCE
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
 float smileyTransparency = 0.2f;
@@ -154,6 +159,10 @@ int main() {
 
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
+    glm::mat4 trans = glm::mat4(1.0f);
+    trans = glm::translate(trans, glm::vec3(-0.5f, 0.0f, 0.0f));
+    trans = glm::rotate(trans, glm::radians(float(glfwGetTime()) * 100.0f),
+                        glm::normalize(glm::vec3(0.5f, 0.5f, 0.0f)));
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -163,6 +172,7 @@ int main() {
 
     shaderProgram.use();
     shaderProgram.setFloat("transparency", smileyTransparency);
+    shaderProgram.setMat4("transform", trans);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
     glActiveTexture(GL_TEXTURE1);

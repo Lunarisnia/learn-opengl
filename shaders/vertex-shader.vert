@@ -10,11 +10,13 @@ out vec3 ourColor;
 out vec3 vertexPosition;
 out vec2 TexCoord;
 
+uniform mat4 transform;
+
 void main() {
     vertexColor = vec3(1.0);
     ourColor = aColor;
     vertexPosition = aPos;
     TexCoord = aTexCoord;
 
-    gl_Position = vec4(aPos.x + horizontalOffset, aPos.y, aPos.z, 1.0);
+    gl_Position = transform * vec4(aPos.x + horizontalOffset, aPos.y, aPos.z, 1.0);
 }
