@@ -2,6 +2,7 @@
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/quaternion_transform.hpp"
 #include "glm/ext/vector_float3.hpp"
+#include "glm/geometric.hpp"
 #include "glm/trigonometric.hpp"
 #include "src/shader.h"
 #include "src/stb_image.h"
@@ -173,6 +174,23 @@ int main() {
       glm::vec3(2.4f, -0.4f, -3.5f),  glm::vec3(-1.7f, 3.0f, -7.5f),
       glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
       glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
+
+  // Creating Camera
+  // ========================
+  // Camera position
+  glm::vec3 cameraPos(0.0f, 0.0f, 3.0f);
+
+  // Camera Target
+  glm::vec3 cameraTarget(0.0f, 0.0f, 0.0f);
+  // Direction to camera
+  glm::vec3 cameraDirection(cameraPos - cameraTarget);
+
+  // Camera Axis
+  glm::vec3 up(0.0f, 1.0f, 0.0f);
+  glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
+  glm::vec3 cameraUp = glm::normalize(glm::cross(cameraDirection, cameraRight));
+  // All that's left is create the view matrix but I am going to use a function
+  // provided by GLM
 
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
