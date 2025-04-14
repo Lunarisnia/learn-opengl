@@ -1,6 +1,7 @@
-#include "glm/common.hpp"
+#include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/ext/quaternion_transform.hpp"
+#include "glm/ext/vector_float3.hpp"
 #include "glm/trigonometric.hpp"
 #include "src/shader.h"
 #include "src/stb_image.h"
@@ -56,35 +57,39 @@ int main() {
 
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-  // Vertices of a triangle
+  // Vertices of a triangle forming a cube
   float vertices[] = {
-      // Coordinate       Color             TextureCoord
-      0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 2.0f, 2.0f, // top right
-      0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 2.0f, 0.0f, // bottom right
-      -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-      -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 2.0f  // top left
-  };
-  int indices[] = {
-      0, 1, 3, //
-      1, 2, 3  //
-  };
+      -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,
+      0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+      -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+
+      -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, 0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
+      0.5f,  0.5f,  0.5f,  1.0f, 1.0f, 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+      -0.5f, 0.5f,  0.5f,  0.0f, 1.0f, -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,
+
+      -0.5f, 0.5f,  0.5f,  1.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f,
+      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+      -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  0.5f,  1.0f, 0.0f,
+
+      0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+      0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,  -0.5f, -0.5f, 0.0f, 1.0f,
+      0.5f,  -0.5f, 0.5f,  0.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+      -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 1.0f,
+      0.5f,  -0.5f, 0.5f,  1.0f, 0.0f, 0.5f,  -0.5f, 0.5f,  1.0f, 0.0f,
+      -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+
+      -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
+      0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+      -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f};
 
   Shader shaderProgram("./shaders/vertex-shader.vert",
                        "./shaders/texture-shader.frag");
   shaderProgram.use();
   shaderProgram.setFloat("horizontalOffset", 0.0f);
 
-  Shader shaderProgram2("./shaders/vertex-shader.vert",
-                        "./shaders/texture-shader.frag");
-
-  shaderProgram2.use();
-  shaderProgram2.setFloat("horizontalOffset", 0.0f);
-  shaderProgram2.setInt("imageTexture", 0);
-  shaderProgram2.setInt("imageTexture2", 1);
-
   // We create a vertex buffer
-  unsigned int VBO, VAO, EBO;
-  glGenBuffers(1, &EBO);
+  unsigned int VBO, VAO;
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
 
@@ -96,20 +101,12 @@ int main() {
   // Actually set the value of the vertex buffer on the GPU from the CPU
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
-               GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
 
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
                         (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
-
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                        (void *)(6 * sizeof(float)));
-  glEnableVertexAttribArray(2);
 
   // Check max attribute allowed on hardware
   // =======================================
@@ -167,46 +164,61 @@ int main() {
   }
   stbi_image_free(data);
 
+  // Enable depth buffer test
+  glEnable(GL_DEPTH_TEST);
+
+  glm::vec3 cubePositions[] = {
+      glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 5.0f, -15.0f),
+      glm::vec3(-1.5f, -2.2f, -2.5f), glm::vec3(-3.8f, -2.0f, -12.3f),
+      glm::vec3(2.4f, -0.4f, -3.5f),  glm::vec3(-1.7f, 3.0f, -7.5f),
+      glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
+      glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
+
   while (!glfwWindowShouldClose(window)) {
     processInput(window);
-    glm::mat4 trans = glm::mat4(1.0f);
-    // Always remember that the operation is applied in reverse, in this case
-    // its rotate then translate
-    trans = glm::translate(trans, glm::vec3(-0.5f, 0.0f, 0.0f));
-    trans = glm::rotate(trans, glm::radians(float(glfwGetTime()) * 100.0f),
-                        glm::normalize(glm::vec3(0.0f, 0.0f, 1.0f)));
+
+    glm::mat4 view(1.0f);
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+    /*view = glm::rotate(view, glm::radians((float)glfwGetTime() * 20.0f),*/
+    /*                   glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)));*/
+
+    glm::mat4 projection(1.0f);
+    projection =
+        glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+
+    glm::mat4 orthoProjection(1.0f);
+    orthoProjection = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, 0.1f, 100.0f);
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
     // Wireframe mode
     /*glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);*/
 
     shaderProgram.use();
     shaderProgram.setFloat("transparency", smileyTransparency);
-    shaderProgram.setMat4("transform", trans);
+    shaderProgram.setMat4("view", view);
+    shaderProgram.setMat4("projection", projection);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture2);
     glBindVertexArray(VAO);
-    /*glDrawArrays(GL_TRIANGLES, 0, 3);*/
 
-    /*glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);*/
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    for (unsigned int i = 0; i < 10; i++) {
+      glm::mat4 localModel(1.0f);
+      localModel = glm::translate(localModel, cubePositions[i]);
+      localModel = glm::rotate(localModel, glm::radians(i * 20.0f),
+                               glm::normalize(glm::vec3(0.3f, 1.0f, 1.0f)));
+      localModel =
+          glm::rotate(localModel, (float)glfwGetTime() * glm::radians(-55.0f),
+                      glm::normalize(glm::vec3(1.0f, 1.0f, 0.0f)));
+      shaderProgram.setMat4("model", localModel);
 
-    // 2nd box
-    glm::mat4 trans2(1.0f);
-    trans2 = glm::translate(trans2, glm::vec3(0.5f, 0.5f, 0.0f));
-    glm::vec2 scale(1.0f);
-    scale *= glm::abs(glm::sin(glfwGetTime() * 2.0f));
-    trans2 = glm::scale(trans2, glm::vec3(scale, 0.0f));
+      glDrawArrays(GL_TRIANGLES, 0, 36);
+    }
 
-    shaderProgram2.use();
-    shaderProgram2.setMat4("transform", trans2);
-    shaderProgram2.setFloat("transparency", smileyTransparency);
-    /*shaderProgram2.setMat4("transform", trans);*/
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    /*glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);*/
 
     glfwSwapBuffers(window);
     glfwPollEvents();

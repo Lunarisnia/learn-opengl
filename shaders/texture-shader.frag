@@ -21,5 +21,5 @@ void main() {
     vec3 colour = texture(imageTexture, TexCoord).xyz;
     colour = mix(colour, smileyFace, transparency);
 
-    FragColor = vec4(colour, 1.0) * vec4(ourColor, 1.0);
+    FragColor = vec4(colour, 1.0);
 }
