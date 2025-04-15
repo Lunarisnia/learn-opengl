@@ -47,6 +47,31 @@ public:
     updateCameraVectors();
   }
 
+  // Result in a working camera but its yaw and pitch is reversed
+  glm::mat4 calculateViewMatrix() {
+    glm::vec3 zAxis = glm::normalize(Position - (Position + Front));
+    glm::vec3 xAxis =
+        glm::normalize(glm::cross(glm::normalize(WorldUp), zAxis));
+    glm::vec3 yAxis = glm::cross(zAxis, xAxis);
+
+    glm::mat4 lookAt = glm::mat4(1.0f);
+    lookAt[0][0] = xAxis.x;
+    lookAt[0][1] = xAxis.y;
+    lookAt[0][2] = xAxis.z;
+    lookAt[1][0] = yAxis.x;
+    lookAt[1][1] = yAxis.y;
+    lookAt[1][2] = yAxis.z;
+    lookAt[2][0] = zAxis.x;
+    lookAt[2][1] = zAxis.y;
+    lookAt[2][2] = zAxis.z;
+    glm::mat4 translation = glm::mat4(1.0f);
+    translation[3][0] = -Position.x;
+    translation[3][1] = -Position.y;
+    translation[3][2] = -Position.z;
+
+    return lookAt * translation;
+  }
+
   // returns the view matrix calculated using Euler Angles and the LookAt Matrix
   glm::mat4 GetViewMatrix() {
     return glm::lookAt(Position, Position + Front, Up);
