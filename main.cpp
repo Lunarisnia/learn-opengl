@@ -46,6 +46,8 @@ float lastFrame = 0.0f;
 float lastX = 400.0f;
 float lastY = 300.0f;
 
+float fov = 45.0f;
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   std::cout << "resizing to: " << width << "x" << height << std::endl;
   glViewport(0, 0, width, height);
@@ -75,6 +77,16 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
   direction.y = sin(glm::radians(pitch));
   direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
   cameraFront = glm::normalize(direction);
+}
+
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+  fov -= (float)yoffset;
+  if (fov < 1.0f) {
+    fov = 1.0f;
+  }
+  if (fov > 45.0f) {
+    fov = 45.0f;
+  }
 }
 
 void processInput(GLFWwindow *window) {
@@ -249,6 +261,7 @@ int main() {
   // =======================
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPosCallback(window, mouse_callback);
+  glfwSetScrollCallback(window, scroll_callback);
 
   while (!glfwWindowShouldClose(window)) {
     currentFrame = glfwGetTime();
@@ -261,7 +274,7 @@ int main() {
 
     glm::mat4 projection(1.0f);
     projection =
-        glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+        glm::perspective(glm::radians(fov), 800.0f / 600.0f, 0.1f, 100.0f);
 
     glm::mat4 orthoProjection(1.0f);
     orthoProjection = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, 0.1f, 100.0f);
