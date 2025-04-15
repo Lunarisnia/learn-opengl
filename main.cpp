@@ -22,6 +22,9 @@ glm::vec3 cameraPos(0.0f, 0.0f, 3.0f);
 glm::vec3 up(0.0f, 1.0f, 0.0f);
 glm::vec3 cameraFront(0.0f, 0.0f, -1.0f);
 
+float yaw = -90.0f;
+float pitch = 0.0f;
+
 // Camera Target
 /*glm::vec3 cameraTarget(0.0f, 0.0f, 0.0f);*/
 // Direction to camera
@@ -40,9 +43,38 @@ float deltaTime = 0.0f;
 float currentFrame = 0.0f;
 float lastFrame = 0.0f;
 
+float lastX = 400.0f;
+float lastY = 300.0f;
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   std::cout << "resizing to: " << width << "x" << height << std::endl;
   glViewport(0, 0, width, height);
+}
+
+void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
+  float xOffset = xpos - lastX;
+  float yOffset = lastY - ypos;
+  lastX = xpos;
+  lastY = ypos;
+
+  const float sensitivity = 0.1f;
+  xOffset *= sensitivity;
+  yOffset *= sensitivity;
+
+  yaw += xOffset;
+  pitch += yOffset;
+  if (pitch > 89.0f) {
+    pitch = 89.0f;
+  }
+  if (pitch < -89.0f) {
+    pitch = -89.0f;
+  }
+
+  glm::vec3 direction;
+  direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+  direction.y = sin(glm::radians(pitch));
+  direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+  cameraFront = glm::normalize(direction);
 }
 
 void processInput(GLFWwindow *window) {
@@ -213,8 +245,10 @@ int main() {
       glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
       glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
 
-  // GLM Camera
+  // Capture the mouse
   // =======================
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwSetCursorPosCallback(window, mouse_callback);
 
   while (!glfwWindowShouldClose(window)) {
     currentFrame = glfwGetTime();
