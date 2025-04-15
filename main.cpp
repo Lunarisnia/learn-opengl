@@ -1,6 +1,5 @@
 #include "glm/ext/matrix_clip_space.hpp"
 #include "glm/ext/matrix_transform.hpp"
-#include "glm/ext/quaternion_transform.hpp"
 #include "glm/ext/vector_float3.hpp"
 #include "glm/geometric.hpp"
 #include "glm/trigonometric.hpp"
@@ -16,6 +15,31 @@
 
 float smileyTransparency = 0.2f;
 
+// Creating Camera
+// ========================
+// Camera position
+glm::vec3 cameraPos(0.0f, 0.0f, 3.0f);
+glm::vec3 up(0.0f, 1.0f, 0.0f);
+glm::vec3 cameraFront(0.0f, 0.0f, -1.0f);
+
+// Camera Target
+/*glm::vec3 cameraTarget(0.0f, 0.0f, 0.0f);*/
+// Direction to camera
+/*glm::vec3 cameraDirection(cameraPos - cameraTarget);*/
+
+// Camera Axis
+/*glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));*/
+/*glm::vec3 cameraUp = glm::normalize(glm::cross(cameraDirection,
+ * cameraRight));*/
+// All that's left is create the view matrix but I am going to use a function
+// provided by GLM
+
+// Frame timing
+// ======================
+float deltaTime = 0.0f;
+float currentFrame = 0.0f;
+float lastFrame = 0.0f;
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   std::cout << "resizing to: " << width << "x" << height << std::endl;
   glViewport(0, 0, width, height);
@@ -25,11 +49,25 @@ void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
+  const float cameraSpeed = 0.5f * deltaTime;
   if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
     smileyTransparency -= 0.1f;
   }
   if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
     smileyTransparency += 0.1f;
+  }
+
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+    cameraPos += cameraSpeed * cameraFront;
+  }
+  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+    cameraPos -= cameraSpeed * cameraFront;
+  }
+  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+    cameraPos -= glm::normalize(glm::cross(cameraFront, up)) * cameraSpeed;
+  }
+  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+    cameraPos += glm::normalize(glm::cross(cameraFront, up)) * cameraSpeed;
   }
 }
 
@@ -175,30 +213,17 @@ int main() {
       glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
       glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
 
-  // Creating Camera
-  // ========================
-  // Camera position
-  glm::vec3 cameraPos(0.0f, 0.0f, 3.0f);
-
-  // Camera Target
-  glm::vec3 cameraTarget(0.0f, 0.0f, 0.0f);
-  // Direction to camera
-  glm::vec3 cameraDirection(cameraPos - cameraTarget);
-
-  // Camera Axis
-  glm::vec3 up(0.0f, 1.0f, 0.0f);
-  glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));
-  glm::vec3 cameraUp = glm::normalize(glm::cross(cameraDirection, cameraRight));
-  // All that's left is create the view matrix but I am going to use a function
-  // provided by GLM
+  // GLM Camera
+  // =======================
 
   while (!glfwWindowShouldClose(window)) {
+    currentFrame = glfwGetTime();
+    deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+
     processInput(window);
 
-    glm::mat4 view(1.0f);
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-    /*view = glm::rotate(view, glm::radians((float)glfwGetTime() * 20.0f),*/
-    /*                   glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f)));*/
+    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, up);
 
     glm::mat4 projection(1.0f);
     projection =
