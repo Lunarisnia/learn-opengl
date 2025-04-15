@@ -3,10 +3,11 @@
 #include "glm/ext/vector_float3.hpp"
 #include "glm/geometric.hpp"
 #include "glm/trigonometric.hpp"
-#include "src/shader.h"
 #include "src/stb_image.h"
 #include <glad/glad.h>
 // FORCE
+#include "src/camera.h"
+#include "src/shader.h"
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -14,28 +15,6 @@
 #include <iostream>
 
 float smileyTransparency = 0.2f;
-
-// Creating Camera
-// ========================
-// Camera position
-glm::vec3 cameraPos(0.0f, 0.0f, 3.0f);
-glm::vec3 up(0.0f, 1.0f, 0.0f);
-glm::vec3 cameraFront(0.0f, 0.0f, -1.0f);
-
-float yaw = -90.0f;
-float pitch = 0.0f;
-
-// Camera Target
-/*glm::vec3 cameraTarget(0.0f, 0.0f, 0.0f);*/
-// Direction to camera
-/*glm::vec3 cameraDirection(cameraPos - cameraTarget);*/
-
-// Camera Axis
-/*glm::vec3 cameraRight = glm::normalize(glm::cross(up, cameraDirection));*/
-/*glm::vec3 cameraUp = glm::normalize(glm::cross(cameraDirection,
- * cameraRight));*/
-// All that's left is create the view matrix but I am going to use a function
-// provided by GLM
 
 // Frame timing
 // ======================
@@ -45,8 +24,7 @@ float lastFrame = 0.0f;
 
 float lastX = 400.0f;
 float lastY = 300.0f;
-
-float fov = 45.0f;
+Camera camera = Camera(glm::vec3(0.0f, 0.0f, 5.0f));
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   std::cout << "resizing to: " << width << "x" << height << std::endl;
@@ -59,34 +37,11 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
   lastX = xpos;
   lastY = ypos;
 
-  const float sensitivity = 0.1f;
-  xOffset *= sensitivity;
-  yOffset *= sensitivity;
-
-  yaw += xOffset;
-  pitch += yOffset;
-  if (pitch > 89.0f) {
-    pitch = 89.0f;
-  }
-  if (pitch < -89.0f) {
-    pitch = -89.0f;
-  }
-
-  glm::vec3 direction;
-  direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-  direction.y = sin(glm::radians(pitch));
-  direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-  cameraFront = glm::normalize(direction);
+  camera.ProcessMouseMovement(xOffset, yOffset);
 }
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
-  fov -= (float)yoffset;
-  if (fov < 1.0f) {
-    fov = 1.0f;
-  }
-  if (fov > 45.0f) {
-    fov = 45.0f;
-  }
+  camera.ProcessMouseScroll(yoffset);
 }
 
 void processInput(GLFWwindow *window) {
@@ -102,16 +57,16 @@ void processInput(GLFWwindow *window) {
   }
 
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-    cameraPos += cameraSpeed * cameraFront;
+    camera.ProcessKeyboard(FORWARD, deltaTime);
   }
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-    cameraPos -= cameraSpeed * cameraFront;
+    camera.ProcessKeyboard(BACKWARD, deltaTime);
   }
   if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-    cameraPos -= glm::normalize(glm::cross(cameraFront, up)) * cameraSpeed;
+    camera.ProcessKeyboard(LEFT, deltaTime);
   }
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-    cameraPos += glm::normalize(glm::cross(cameraFront, up)) * cameraSpeed;
+    camera.ProcessKeyboard(RIGHT, deltaTime);
   }
 }
 
@@ -257,7 +212,7 @@ int main() {
       glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f),
       glm::vec3(1.5f, 0.2f, -1.5f),   glm::vec3(-1.3f, 1.0f, -1.5f)};
 
-  // Capture the mouse
+  // Create a camera
   // =======================
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPosCallback(window, mouse_callback);
@@ -270,14 +225,11 @@ int main() {
 
     processInput(window);
 
-    glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, up);
+    glm::mat4 view = camera.GetViewMatrix();
 
     glm::mat4 projection(1.0f);
-    projection =
-        glm::perspective(glm::radians(fov), 800.0f / 600.0f, 0.1f, 100.0f);
-
-    glm::mat4 orthoProjection(1.0f);
-    orthoProjection = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, 0.1f, 100.0f);
+    projection = glm::perspective(glm::radians(camera.Zoom), 800.0f / 600.0f,
+                                  0.1f, 100.0f);
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
